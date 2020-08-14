@@ -1,19 +1,26 @@
 package org.telegram.services;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
+//import org.apache.http.HttpEntity;
+import org.springframework.http.HttpEntity;
+//import org.apache.http.client.methods.CloseableHttpResponse;
+//import org.apache.http.client.methods.HttpGet;
+//import org.apache.http.conn.ssl.NoopHostnameVerifier;
+//import org.apache.http.entity.BufferedHttpEntity;
+//import org.apache.http.impl.client.CloseableHttpClient;
+//import org.apache.http.impl.client.HttpClientBuilder;
+//import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.telegram.BuildVars;
 import org.telegram.database.DatabaseManager;
 import org.telegram.telegrambots.meta.logging.BotLogger;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -120,16 +127,22 @@ public class WeatherService {
         String cityFound;
         String responseToUser;
         try {
-            String completURL = BASEURL + FORECASTPATH + "?" + getCityQuery(city) +
-                    FORECASTPARAMS.replace("@language@", language).replace("@units@", units) + APIIDEND;
-            CloseableHttpClient client = HttpClientBuilder.create().setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
-            HttpGet request = new HttpGet(completURL);
+            URI completURL = new URI(BASEURL + FORECASTPATH + "?" + getCityQuery(city) +
+                    FORECASTPARAMS.replace("@language@", language).replace("@units@", units) + APIIDEND);
+           // CloseableHttpClient client = HttpClientBuilder.create().setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
+           // HttpGet request = new HttpGet(completURL);
+            ClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+            ClientHttpRequest request = factory.createRequest(completURL, HttpMethod.GET);
 
-            CloseableHttpResponse response = client.execute(request);
-            HttpEntity ht = response.getEntity();
+            //CloseableHttpResponse response = client.execute(request);
+            ClientHttpResponse response = request.execute();
 
-            BufferedHttpEntity buf = new BufferedHttpEntity(ht);
-            String responseString = EntityUtils.toString(buf, "UTF-8");
+            HttpEntity ht = new HttpEntity(response);
+
+            //BufferedHttpEntity buf = new BufferedHttpEntity(ht);
+            //BufferingClientHttpResponseWrapper buf = new Buffer
+            //String responseString = EntityUtils.toString(buf, "UTF-8");
+            String responseString;
 
             JSONObject jsonObject = new JSONObject(responseString);
             BotLogger.info(LOGTAG, jsonObject.toString());
